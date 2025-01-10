@@ -37,4 +37,26 @@ const fetchCryptoDetails = async () => {
     }
 };
 
-module.exports = { fetchCryptoDetails };
+/**
+ * Function to calculate the standard deviation of an array of numbers.
+ * @param {Array} values - Array of numbers (prices).
+ * @returns {number} - Standard deviation of the prices.
+ */
+function calculateStandardDeviation(values) {
+    const n = values.length;
+    if (n === 0) return 0;
+
+    // Calculate the mean
+    const mean = values.reduce((acc, val) => acc + val, 0) / n;
+
+    // Calculate the squared differences from the mean
+    const squaredDifferences = values.map(val => Math.pow(val - mean, 2));
+
+    // Calculate the variance
+    const variance = squaredDifferences.reduce((acc, val) => acc + val, 0) / n;
+
+    // Return the standard deviation (sqrt of variance)
+    return Math.sqrt(variance);
+}
+
+module.exports = { fetchCryptoDetails, calculateStandardDeviation };
