@@ -4,38 +4,57 @@ const Coin = require('../models/Coin');
 const BASE_URL = "https://api.coingecko.com/api/v3";
 
 // Fetch cryptocurrency details
-const fetchCryptoDetails = async () => {
-    try {
-        const response = await axios.get(`${BASE_URL}/simple/price`, {
-            params: {
-                ids: "bitcoin,ethereum,matic-network",
-                vs_currencies: "usd",
-                include_market_cap: true,
-                include_24hr_change: true,
-            },
-        });
+async function fetchCryptoDetails() {
+    const axios = require("axios");
 
-        const coinsData = response.data;
+    // CoinGecko API base URL
+    const url = "https://api.coingecko.com/api/v3/simple/price";
 
-        const coinsToSave = Object.keys(coinsData).map((id) => ({
-            id,
-            symbol: id === "matic-network" ? "matic" : id,
-            name: id.charAt(0).toUpperCase() + id.slice(1),
-            current_price: coinsData[id].usd,
-            market_cap: coinsData[id].usd_market_cap,
-            price_change_percentage_24h: coinsData[id].usd_24h_change,
-        }));
+    // List of coins to fetch data for
+    const coins = [
+        { id: "bitcoin", symbol: "btc" },
+        { id: "matic-network", symbol: "matic" },
+        { id: "ethereum", symbol: "eth" }
+    ];
 
-        // Save to the database
-        for (const coin of coinsToSave) {
-            await Coin.findOneAndUpdate({ id: coin.id }, coin, { upsert: true, new: true });
+    for (let coin of coins) {
+        try {
+            // Fetch the current price, market cap, and price change for each coin
+            const response = await axios.get(url, {
+                params: {
+                    ids: coins.join(","),
+                    vs_currencies: "usd",
+                    include_market_cap: "true",
+                    include_24hr_change: "true"
+                }
+            });
+
+            // Prepare data to store in the database
+            for (let coin of coins) {
+                const data = response.data[coin];
+
+                // Prepare data to store in the database
+                const newCoinData = {
+                    id: coin,
+                    symbol: coin.slice(0, 3),  // Extract symbol based on CoinGecko ID
+                    name: coin.charAt(0).toUpperCase() + coin.slice(1),
+                    current_price: data.usd,
+                    market_cap: data.usd_market_cap,
+                    price_change_percentage_24h: data.usd_24h_change,
+                    createdAt: new Date()
+                };
+
+            // Insert the new coin data without overwriting existing records
+            await Coin.create(newCoinData);  // This will insert new records without overwriting
+
+            console.log(`Data for ${coin.id} fetched and stored successfully!`);
+            }
+            await delay(2000);
+        } catch (error) {
+            console.error(`Error fetching data for ${coin.id}:`, error.message);
         }
-
-        console.log("Crypto details fetched and stored successfully!");
-    } catch (error) {
-        console.error("Error fetching crypto details:", error.message);
     }
-};
+}
 
 /**
  * Function to calculate the standard deviation of an array of numbers.
