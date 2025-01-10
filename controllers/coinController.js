@@ -22,7 +22,7 @@ async function fetchCryptoDetails() {
             // Fetch the current price, market cap, and price change for each coin
             const response = await axios.get(url, {
                 params: {
-                    ids: coins.join(","),
+                    ids: coins.map(coin => coin.id).join(","),
                     vs_currencies: "usd",
                     include_market_cap: "true",
                     include_24hr_change: "true"
@@ -31,13 +31,13 @@ async function fetchCryptoDetails() {
 
             // Prepare data to store in the database
             for (let coin of coins) {
-                const data = response.data[coin];
+                const data = response.data[coin.id];
 
                 // Prepare data to store in the database
                 const newCoinData = {
-                    id: coin,
-                    symbol: coin.slice(0, 3),  // Extract symbol based on CoinGecko ID
-                    name: coin.charAt(0).toUpperCase() + coin.slice(1),
+                    id: coin.id,
+                    symbol: coin.symbol,  // Extract symbol based on CoinGecko ID
+                    name: coin.id.charAt(0).toUpperCase() + coin.id.slice(1),
                     current_price: data.usd,
                     market_cap: data.usd_market_cap,
                     price_change_percentage_24h: data.usd_24h_change,
@@ -49,7 +49,7 @@ async function fetchCryptoDetails() {
 
             console.log(`Data for ${coin.id} fetched and stored successfully!`);
             }
-            await delay(2000);
+            await delay(5000);
         } catch (error) {
             console.error(`Error fetching data for ${coin.id}:`, error.message);
         }

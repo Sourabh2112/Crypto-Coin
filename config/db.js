@@ -5,7 +5,7 @@ const connectDB = async () => {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
-        console.log("MongoDB connected successfully");
+        console.log("Connected to MongoDB Atlas!");
     } catch (error) {
         console.error("MongoDB connection failed:", error.message);
         process.exit(1);
