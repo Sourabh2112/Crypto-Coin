@@ -59,8 +59,6 @@ async function fetchCryptoDetails() {
 
 /**
  * Function to calculate the standard deviation of an array of numbers.
- * @param {Array} values - Array of numbers (prices).
- * @returns {number} - Standard deviation of the prices.
  */
 async function calculateStandardDeviation(coinId) {
     try {
