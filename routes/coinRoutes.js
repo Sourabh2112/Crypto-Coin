@@ -67,35 +67,18 @@ router.get("/stats", async (req, res) => {
  * Description: Get the standard deviation of the last 100 prices for the requested cryptocurrency.
  * Query Parameters: coin (e.g., "bitcoin", "ethereum", "matic-network")
  */
-router.get("/deviation", async (req, res) => {
+router.get('/deviation', async (req, res) => {
     const { coin } = req.query;
 
     if (!coin) {
-        return res.status(400).json({ message: "Query parameter 'coin' is required." });
+        return res.status(400).json({ error: "Coin query parameter is required" });
     }
 
-    try {
-        // Fetch the last 100 records of the coin from the database
-        const coinData = await Coin.find({ id: coin }).sort({ createdAt: -1 }).limit(100);
+    // Call the getDeviation function with the requested coin
+    const deviation = await calculateStandardDeviation(coin);
 
-        if (coinData.length === 0) {
-            return res.status(404).json({ message: `No records found for '${coin}'.` });
-        }
-
-        // Extract the prices from the fetched records
-        const prices = coinData.map(data => data.current_price);
-
-        // Calculate the standard deviation
-        const deviation = calculateStandardDeviation(prices);
-
-        // Return the result
-        res.status(200).json({ deviation: deviation });
-    } catch (error) {
-        console.error("Error calculating standard deviation:", error.message);
-        res.status(500).json({ message: "Internal server error.", error: error.message });
-    }
-});
-
+    res.json(deviation);
+})
 
 
 module.exports = router;

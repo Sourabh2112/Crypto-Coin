@@ -1,4 +1,5 @@
 const axios = require("axios");
+const mongoose = require('mongoose');
 const Coin = require('../models/Coin');
 
 const BASE_URL = "https://api.coingecko.com/api/v3";
@@ -61,21 +62,28 @@ async function fetchCryptoDetails() {
  * @param {Array} values - Array of numbers (prices).
  * @returns {number} - Standard deviation of the prices.
  */
-function calculateStandardDeviation(values) {
-    const n = values.length;
-    if (n === 0) return 0;
+async function calculateStandardDeviation(coinId) {
+    try {
+        // Fetch the last 100 records for the requested coin
+        const records = await Coin.find({ id: coinId }).sort({ createdAt: -1 })  // Sort by the most recent
+            .limit(100);  // Limit to the last 100 records
+        if (records.length === 0) {
+            return { deviation: 0 };  // No records found
+        }
 
-    // Calculate the mean
-    const mean = values.reduce((acc, val) => acc + val, 0) / n;
-
-    // Calculate the squared differences from the mean
-    const squaredDifferences = values.map(val => Math.pow(val - mean, 2));
-
-    // Calculate the variance
-    const variance = squaredDifferences.reduce((acc, val) => acc + val, 0) / n;
-
-    // Return the standard deviation (sqrt of variance)
-    return Math.sqrt(variance);
+        // Extract the current prices of the records
+        const prices = records.map(record => record.current_price);
+        // Calculate the mean (average) of the prices
+        const mean = prices.reduce((acc, price) => acc + price, 0) / prices.length;
+        // Calculate the variance (sum of squared differences from the mean)
+        const variance = prices.reduce((acc, price) => acc + Math.pow(price - mean, 2), 0) / prices.length;
+        // Standard deviation is the square root of variance
+        const standardDeviation = Math.sqrt(variance);
+        return { deviation: standardDeviation };
+    } catch (error) {
+        console.error("Error calculating deviation:", error.message);
+        return { deviation: 0 };
+    }
 }
 
 module.exports = { fetchCryptoDetails, calculateStandardDeviation };
